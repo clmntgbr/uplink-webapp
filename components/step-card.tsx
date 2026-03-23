@@ -21,11 +21,13 @@ export function StepCard({ step }: StepCardProps) {
     >
       <CardContent
         className={cn(
-          "flex h-14 w-14 shrink-0 items-center justify-center rounded-md font-bold",
-          GetMethodColor(step.endpoint.method)
+          "flex h-12 w-12 shrink-0 items-center justify-center rounded-md " +
+            GetMethodColor(step.endpoint.method)
         )}
       >
-        <p>{step.endpoint.method}</p>
+        <p className="font-bold" style={{ fontSize: "10px" }}>
+          {step.endpoint.method}
+        </p>
       </CardContent>
       <CardHeader className="flex-1 gap-0">
         <CardTitle className="text-lg font-semibold">{step.name}</CardTitle>
