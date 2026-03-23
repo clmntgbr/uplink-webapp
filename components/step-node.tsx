@@ -56,7 +56,7 @@ function StepNode({ data, selected }: NodeProps) {
             </p>
           </CardContent>
           <CardHeader className="flex-1 gap-0 p-0">
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="truncate text-base font-semibold">
               {step.name}
             </CardTitle>
             <CardDescription className="truncate text-xs">
@@ -66,7 +66,7 @@ function StepNode({ data, selected }: NodeProps) {
         </div>
 
         {outputs.length > 0 && (
-          <div className="px-3 pt-2">
+          <div className="px-3">
             <div className="flex gap-1">
               {outputs.map((port) => (
                 <div
@@ -91,14 +91,16 @@ function StepNode({ data, selected }: NodeProps) {
       {outputs.length > 0 ? (
         outputs.map((port, i) => {
           const total = outputs.length
-          const pct = total === 1 ? 50 : (i / (total - 1)) * 80 + 10
+          const outputWidth = 100 / total
+          const centerOffset = outputWidth / 2
+          const leftPosition = i * outputWidth + centerOffset
           return (
             <Handle
               key={port.id}
               type="source"
               position={Position.Bottom}
               id={port.id}
-              style={{ left: `${pct}%` }}
+              style={{ left: `${leftPosition}%` }}
               className="-bottom-1!"
             />
           )
