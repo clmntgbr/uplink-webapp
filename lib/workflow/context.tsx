@@ -1,20 +1,23 @@
-"use client";
+"use client"
 
-import { createContext, useContext } from "react";
-import { CreateWorkflowPayload, Workflow, WorkflowState } from "./types";
+import { createContext, useContext } from "react"
+import { Workflow, WorkflowState, CreateWorkflowPayload } from "./types"
+import { Paginate } from "../paginate"
 
-export interface WorkflowContextType extends WorkflowState {
-  fetchWorkflows: () => Promise<void>;
-  fetchWorkflow: (id: string) => Promise<Workflow>;
-  createWorkflow: (payload: CreateWorkflowPayload) => Promise<void>;
+interface WorkflowContextType extends WorkflowState {
+  fetchWorkflows: () => Promise<void>
+  fetchWorkflow: (id: string) => Promise<Workflow>
+  createWorkflow: (payload: CreateWorkflowPayload) => Promise<void>
 }
 
-export const WorkflowContext = createContext<WorkflowContextType | undefined>(undefined);
+export const WorkflowContext = createContext<WorkflowContextType | undefined>(
+  undefined
+)
 
-export const useWorkflow = () => {
-  const context = useContext(WorkflowContext);
-  if (!context) {
-    throw new Error("useWorkflow must be used within WorkflowProvider");
+export function useWorkflow() {
+  const context = useContext(WorkflowContext)
+  if (context === undefined) {
+    throw new Error("useWorkflow must be used within a WorkflowProvider")
   }
-  return context;
-};
+  return context
+}
