@@ -1,11 +1,9 @@
 "use client"
 
-import { OutputsEditor } from "@/components/outputs-editor"
 import EndpointsLibrary from "@/components/endpoints-library"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import WorkflowCanvas, { WorkflowCanvasRef } from "@/components/workflow-canvas"
-import { OutputPort } from "@/lib/types"
 import { Workflow, WorkflowStep } from "@/lib/workflow/types"
 import { Save } from "lucide-react"
 import { useCallback, useRef, useState } from "react"
@@ -36,18 +34,7 @@ export default function WorkflowId() {
       ...workflow,
       savedAt: new Date().toISOString(),
     }
-    console.log("Saving workflow:", JSON.stringify(workflowData, null, 2))
   }, [workflow])
-
-  const handleOutputsChange = useCallback(
-    (outputs: OutputPort[]) => {
-      if (selectedStep && canvasRef.current) {
-        canvasRef.current.updateStepOutputs(selectedStep.id, outputs)
-        setSelectedStep((prev) => (prev ? { ...prev, outputs } : null))
-      }
-    },
-    [selectedStep]
-  )
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
@@ -103,13 +90,6 @@ export default function WorkflowId() {
                       {selectedStep.step.endpoint.method}
                     </p>
                   </div>
-                </div>
-
-                <div className="border-t pt-4">
-                  <OutputsEditor
-                    outputs={selectedStep.outputs}
-                    onChange={handleOutputsChange}
-                  />
                 </div>
               </div>
             </ScrollArea>

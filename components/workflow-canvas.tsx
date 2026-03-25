@@ -1,6 +1,5 @@
 import type { Endpoint } from "@/lib/endpoint/types"
 import type { Step } from "@/lib/step/types"
-import type { OutputPort } from "@/lib/types"
 import type {
   Workflow,
   WorkflowConnection,
@@ -9,9 +8,10 @@ import type {
 import {
   Background,
   BackgroundVariant,
+  ConnectionLineType,
+  ConnectionMode,
   Controls,
   ReactFlow,
-  addEdge,
   useEdgesState,
   useNodesState,
   type Connection,
@@ -25,27 +25,25 @@ import "@xyflow/react/dist/style.css"
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
 } from "react"
+import { v4 as uuidv4 } from "uuid"
 import StepNode from "./step-node"
 
 const nodeTypes = { stepNode: StepNode }
 
 export type { Workflow, WorkflowConnection, WorkflowStep }
 
-export interface WorkflowCanvasRef {
-  updateStepOutputs: (stepId: string, outputs: OutputPort[]) => void
-}
+export type WorkflowCanvasRef = object
 
 interface WorkflowCanvasProps {
   workflow?: Workflow
   onWorkflowChange?: (workflow: Workflow) => void
   onStepSelect?: (step: WorkflowStep | null) => void
 }
-
-let nodeId = 100
 
 function workflowToReactFlow(workflow?: Workflow): {
   nodes: Node[]
@@ -61,14 +59,12 @@ function workflowToReactFlow(workflow?: Workflow): {
     position: workflowStep.position,
     data: {
       step: workflowStep.step,
-      outputs: workflowStep.outputs,
     },
   }))
 
   const edges: Edge[] = workflow.connections.map((conn) => ({
     id: conn.id,
     source: conn.from,
-    sourceHandle: conn.fromHandle,
     target: conn.to,
     type: "smoothstep",
   }))
@@ -81,17 +77,24 @@ function reactFlowToWorkflow(
   edges: Edge[],
   currentWorkflow?: Workflow
 ): Workflow {
-  const steps: WorkflowStep[] = nodes.map((node) => ({
-    id: node.id,
-    step: node.data.step as Step,
-    position: node.position,
-    outputs: (node.data.outputs as OutputPort[]) || [],
-  }))
+  const steps: WorkflowStep[] = nodes.map((node) => {
+    const step = node.data.step as Step
+    return {
+      id: node.id,
+      step: {
+        id: step.id,
+        name: step.name,
+        description: step.description,
+        endpointId:
+          step.endpoint?.["@id"] || step.endpoint?.id || step.endpointId,
+      },
+      position: node.position,
+    }
+  })
 
   const connections: WorkflowConnection[] = edges.map((edge) => ({
     id: edge.id,
     from: edge.source,
-    fromHandle: edge.sourceHandle || null,
     to: edge.target,
   }))
 
@@ -111,41 +114,41 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialState.edges)
     const reactFlowWrapper = useRef<HTMLDivElement>(null)
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
+    const workflowIdRef = useRef(workflow?.id)
 
-    const notifyWorkflowChange = useCallback(() => {
+    useEffect(() => {
+      if (workflowIdRef.current !== workflow?.id) {
+        workflowIdRef.current = workflow?.id
+        return
+      }
       if (onWorkflowChange) {
         const updatedWorkflow = reactFlowToWorkflow(nodes, edges, workflow)
         onWorkflowChange(updatedWorkflow)
       }
-    }, [nodes, edges, workflow, onWorkflowChange])
+    }, [nodes, edges])
 
-    const updateStepOutputs = useCallback(
-      (stepId: string, outputs: OutputPort[]) => {
-        setNodes((nds) =>
-          nds.map((node) =>
-            node.id === stepId
-              ? { ...node, data: { ...node.data, outputs } }
-              : node
-          )
-        )
-        setTimeout(() => notifyWorkflowChange(), 0)
-      },
-      [setNodes, notifyWorkflowChange]
-    )
+    useImperativeHandle(ref, () => ({}))
 
-    useImperativeHandle(ref, () => ({
-      updateStepOutputs,
-    }))
+    const isValidConnection = useCallback((connection: Connection | Edge) => {
+      const source = "source" in connection ? connection.source : null
+      const target = "target" in connection ? connection.target : null
+      return source !== target
+    }, [])
 
     const onConnect = useCallback(
       (params: Connection) => {
         setEdges((eds) => {
-          const newEdges = addEdge({ ...params, type: "smoothstep" }, eds)
-          setTimeout(() => notifyWorkflowChange(), 0)
+          const newEdge = {
+            id: uuidv4(),
+            source: params.source!,
+            target: params.target!,
+            type: "smoothstep",
+          }
+          const newEdges = [...eds, newEdge]
           return newEdges
         })
       },
-      [setEdges, notifyWorkflowChange]
+      [setEdges]
     )
 
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -170,25 +173,24 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           name: endpoint.name,
           description: `${endpoint.path}`,
           endpoint,
+          endpointId: endpoint["@id"] || endpoint.id,
         }
 
         const newNode: Node = {
-          id: `step-${++nodeId}`,
+          id: uuidv4(),
           type: "stepNode",
           position,
           data: {
             step,
-            outputs: [],
           },
         }
 
         setNodes((nds) => {
           const updated = [...nds, newNode]
-          setTimeout(() => notifyWorkflowChange(), 0)
           return updated
         })
       },
-      [rfInstance, setNodes, notifyWorkflowChange]
+      [rfInstance, setNodes]
     )
 
     const handleNodeClick = useCallback(
@@ -198,7 +200,6 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
             id: node.id,
             step: node.data.step as Step,
             position: node.position,
-            outputs: (node.data.outputs as OutputPort[]) || [],
           }
           onStepSelect(workflowStep)
         }
@@ -215,17 +216,15 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const handleNodesChange = useCallback(
       (changes: NodeChange[]) => {
         onNodesChange(changes)
-        setTimeout(() => notifyWorkflowChange(), 0)
       },
-      [onNodesChange, notifyWorkflowChange]
+      [onNodesChange]
     )
 
     const handleEdgesChange = useCallback(
       (changes: EdgeChange[]) => {
         onEdgesChange(changes)
-        setTimeout(() => notifyWorkflowChange(), 0)
       },
-      [onEdgesChange, notifyWorkflowChange]
+      [onEdgesChange]
     )
 
     return (
@@ -236,6 +235,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
+          isValidConnection={isValidConnection}
           onInit={setRfInstance}
           onDrop={onDrop}
           onDragOver={onDragOver}
@@ -246,7 +246,9 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           snapToGrid
           snapGrid={[20, 20]}
           defaultEdgeOptions={{ type: "smoothstep" }}
+          connectionLineType={ConnectionLineType.SmoothStep}
           proOptions={{ hideAttribution: true }}
+          connectionMode={ConnectionMode.Loose}
         >
           <Background
             variant={BackgroundVariant.Dots}

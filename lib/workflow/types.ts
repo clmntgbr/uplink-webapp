@@ -1,18 +1,15 @@
 import { Paginate } from "@/lib/paginate"
 import { Step } from "@/lib/step/types"
-import { OutputPort } from "@/lib/types"
 
 export interface WorkflowStep {
   id: string
   step: Step
   position: { x: number; y: number }
-  outputs: OutputPort[]
 }
 
 export interface WorkflowConnection {
   id: string
   from: string
-  fromHandle: string | null
   to: string
 }
 
