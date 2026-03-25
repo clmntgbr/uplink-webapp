@@ -32,9 +32,8 @@ export default function WorkflowId() {
   const handleSave = useCallback(() => {
     const workflowData = {
       ...workflow,
-      savedAt: new Date().toISOString(),
     }
-    console.log("Saving workflow:", JSON.stringify(workflowData, null, 2))
+    console.log(JSON.stringify(workflowData, null, 2))
   }, [workflow])
 
   return (
@@ -71,24 +70,22 @@ export default function WorkflowId() {
                     <label className="text-xs font-medium text-muted-foreground">
                       Name
                     </label>
-                    <p className="text-sm font-medium">
-                      {selectedStep.step.name}
-                    </p>
+                    <p className="text-sm font-medium">{selectedStep.name}</p>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">
                       Endpoint
                     </label>
                     <p className="font-mono text-xs">
-                      {selectedStep.step.endpoint?.path || selectedStep.step.description}
+                      {selectedStep.description}
                     </p>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">
-                      Method
+                      Endpoint ID
                     </label>
-                    <p className="text-sm font-medium">
-                      {selectedStep.step.endpoint?.method || "N/A"}
+                    <p className="font-mono text-xs">
+                      {selectedStep.endpointId}
                     </p>
                   </div>
                 </div>

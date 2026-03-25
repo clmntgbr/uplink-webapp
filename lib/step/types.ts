@@ -4,6 +4,6 @@ export interface Step {
   id: string
   name: string
   description?: string
-  endpoint?: Endpoint
+  endpoint: Endpoint
   endpointId?: string
 }

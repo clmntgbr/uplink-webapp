@@ -11,6 +11,7 @@ import {
   ConnectionLineType,
   ConnectionMode,
   Controls,
+  MarkerType,
   ReactFlow,
   useEdgesState,
   useNodesState,
@@ -58,7 +59,12 @@ function workflowToReactFlow(workflow?: Workflow): {
     type: "stepNode",
     position: workflowStep.position,
     data: {
-      step: workflowStep.step,
+      step: {
+        id: workflowStep.id,
+        name: workflowStep.name,
+        description: workflowStep.description,
+        endpointId: workflowStep.endpointId,
+      },
     },
   }))
 
@@ -67,6 +73,7 @@ function workflowToReactFlow(workflow?: Workflow): {
     source: conn.from,
     target: conn.to,
     type: "smoothstep",
+    markerEnd: { type: MarkerType.ArrowClosed },
   }))
 
   return { nodes, edges }
@@ -81,13 +88,10 @@ function reactFlowToWorkflow(
     const step = node.data.step as Step
     return {
       id: node.id,
-      step: {
-        id: step.id,
-        name: step.name,
-        description: step.description,
-        endpointId:
-          step.endpoint?.["@id"] || step.endpoint?.id || step.endpointId,
-      },
+      name: step.name,
+      description: step.description,
+      endpointId:
+        step.endpoint?.["@id"] || step.endpoint?.id || step.endpointId || "",
       position: node.position,
     }
   })
@@ -154,6 +158,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
             source: params.source!,
             target: params.target!,
             type: "smoothstep",
+            markerEnd: { type: MarkerType.ArrowClosed },
           }
           const newEdges = [...eds, newEdge]
           return newEdges
@@ -207,9 +212,12 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const handleNodeClick = useCallback(
       (_: React.MouseEvent, node: Node) => {
         if (onStepSelect) {
+          const step = node.data.step as Step
           const workflowStep: WorkflowStep = {
             id: node.id,
-            step: node.data.step as Step,
+            name: step.name,
+            description: step.description,
+            endpointId: step.endpoint.id,
             position: node.position,
           }
           onStepSelect(workflowStep)
@@ -256,7 +264,10 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           fitView
           snapToGrid
           snapGrid={[20, 20]}
-          defaultEdgeOptions={{ type: "smoothstep" }}
+          defaultEdgeOptions={{
+            type: "smoothstep",
+            markerEnd: { type: MarkerType.ArrowClosed },
+          }}
           connectionLineType={ConnectionLineType.SmoothStep}
           proOptions={{ hideAttribution: true }}
           connectionMode={ConnectionMode.Loose}

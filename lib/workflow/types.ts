@@ -1,9 +1,10 @@
 import { Paginate } from "@/lib/paginate"
-import { Step } from "@/lib/step/types"
 
 export interface WorkflowStep {
   id: string
-  step: Step
+  name: string
+  description?: string
+  endpointId: string
   position: { x: number; y: number }
 }
 
