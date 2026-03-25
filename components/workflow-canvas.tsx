@@ -114,16 +114,24 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialState.edges)
     const reactFlowWrapper = useRef<HTMLDivElement>(null)
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
-    const workflowIdRef = useRef(workflow?.id)
+    const onWorkflowChangeRef = useRef(onWorkflowChange)
+    const workflowRef = useRef(workflow)
 
     useEffect(() => {
-      if (workflowIdRef.current !== workflow?.id) {
-        workflowIdRef.current = workflow?.id
-        return
-      }
-      if (onWorkflowChange) {
-        const updatedWorkflow = reactFlowToWorkflow(nodes, edges, workflow)
-        onWorkflowChange(updatedWorkflow)
+      onWorkflowChangeRef.current = onWorkflowChange
+      workflowRef.current = workflow
+    })
+
+    useEffect(() => {
+      if (onWorkflowChangeRef.current) {
+        const updatedWorkflow = reactFlowToWorkflow(
+          nodes,
+          edges,
+          workflowRef.current
+        )
+        console.log("Workflow update - edges:", edges)
+        console.log("Workflow update - connections:", updatedWorkflow.connections)
+        onWorkflowChangeRef.current(updatedWorkflow)
       }
     }, [nodes, edges])
 

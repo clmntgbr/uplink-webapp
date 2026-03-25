@@ -34,6 +34,7 @@ export default function WorkflowId() {
       ...workflow,
       savedAt: new Date().toISOString(),
     }
+    console.log("Saving workflow:", JSON.stringify(workflowData, null, 2))
   }, [workflow])
 
   return (
@@ -79,7 +80,7 @@ export default function WorkflowId() {
                       Endpoint
                     </label>
                     <p className="font-mono text-xs">
-                      {selectedStep.step.endpoint.path}
+                      {selectedStep.step.endpoint?.path || selectedStep.step.description}
                     </p>
                   </div>
                   <div>
@@ -87,7 +88,7 @@ export default function WorkflowId() {
                       Method
                     </label>
                     <p className="text-sm font-medium">
-                      {selectedStep.step.endpoint.method}
+                      {selectedStep.step.endpoint?.method || "N/A"}
                     </p>
                   </div>
                 </div>
