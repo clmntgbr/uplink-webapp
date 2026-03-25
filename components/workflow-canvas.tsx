@@ -130,7 +130,10 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           workflowRef.current
         )
         console.log("Workflow update - edges:", edges)
-        console.log("Workflow update - connections:", updatedWorkflow.connections)
+        console.log(
+          "Workflow update - connections:",
+          updatedWorkflow.connections
+        )
         onWorkflowChangeRef.current(updatedWorkflow)
       }
     }, [nodes, edges])
@@ -181,7 +184,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           name: endpoint.name,
           description: `${endpoint.path}`,
           endpoint,
-          endpointId: endpoint["@id"] || endpoint.id,
+          endpointId: endpoint.id,
         }
 
         const newNode: Node = {
