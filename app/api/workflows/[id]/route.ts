@@ -26,7 +26,14 @@ export async function GET(
     }
 
     const data = await response.json()
-    const workflow = pick(data, ["@id", "id", "name", "description"])
+    const workflow = pick(data, [
+      "@id",
+      "id",
+      "name",
+      "description",
+      "steps",
+      "connections",
+    ])
 
     return NextResponse.json(workflow)
   } catch (error) {
@@ -46,8 +53,6 @@ export async function PUT(
 
     const { id } = await params
     const payload = (await request.json()) as UpdateWorkflowPayload
-
-    console.log(payload.steps?.[0]?.position)
 
     const response = await fetch(`${BACKEND_API_URL}/workflows/${id}`, {
       method: "PUT",

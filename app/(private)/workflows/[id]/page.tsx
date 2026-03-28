@@ -8,23 +8,23 @@ import { useWorkflow } from "@/lib/workflow/context"
 import { Workflow, WorkflowStep } from "@/lib/workflow/types"
 import { Save } from "lucide-react"
 import { useParams } from "next/navigation"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 export default function WorkflowId() {
   const canvasRef = useRef<WorkflowCanvasRef>(null)
 
   const { id } = useParams()
 
-  const { updateWorkflow } = useWorkflow()
+  const { updateWorkflow, fetchWorkflow } = useWorkflow()
   const [selectedStep, setSelectedStep] = useState<WorkflowStep | null>(null)
 
-  const [workflow, setWorkflow] = useState<Workflow>({
-    id: id as string,
-    name: "New Workflow",
-    description: "Build your workflow by dragging steps onto the canvas",
-    steps: [],
-    connections: [],
-  })
+  const [workflow, setWorkflow] = useState<Workflow | null>(null)
+
+  useEffect(() => {
+    fetchWorkflow(id as string).then((workflow) => {
+      setWorkflow(workflow)
+    })
+  }, [fetchWorkflow, id])
 
   const handleWorkflowChange = useCallback((updatedWorkflow: Workflow) => {
     setWorkflow(updatedWorkflow)
@@ -40,8 +40,11 @@ export default function WorkflowId() {
     }
 
     await updateWorkflow(workflowData)
-    console.log(JSON.stringify(workflowData, null, 2))
   }, [workflow, updateWorkflow])
+
+  if (!workflow) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">

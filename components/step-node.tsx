@@ -27,7 +27,7 @@ function StepNode({ data, selected }: NodeProps) {
           minWidth: "300px",
         }}
       >
-        <div className="flex flex-row items-center px-3 gap-3">
+        <div className="flex flex-row items-center gap-3 px-3">
           {index && (
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
               {index}
@@ -35,7 +35,7 @@ function StepNode({ data, selected }: NodeProps) {
           )}
           <CardContent
             className={cn(
-              "flex h-12 w-12 shrink-0 items-center justify-center rounded-md p-0 " +
+              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full p-0 " +
                 GetMethodColor(step.endpoint?.method || "GET")
             )}
           >
@@ -43,7 +43,7 @@ function StepNode({ data, selected }: NodeProps) {
               {step.endpoint?.method || "GET"}
             </p>
           </CardContent>
-          <CardHeader className="flex-1 gap-0 p-0">
+          <CardHeader className="flex-1 gap-0 group-data-[size=sm]/card:px-0">
             <CardTitle className="truncate text-base font-semibold">
               {step.name}
             </CardTitle>

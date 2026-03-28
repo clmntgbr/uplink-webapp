@@ -64,6 +64,7 @@ function workflowToReactFlow(workflow?: Workflow): {
         name: workflowStep.name,
         description: workflowStep.description,
         endpointId: workflowStep.endpointId,
+        endpoint: workflowStep.endpoint,
       },
       index: workflowStep.index,
     },
@@ -147,8 +148,8 @@ function reactFlowToWorkflow(
       id: node.id,
       name: step.name,
       description: step.description,
-      endpointId:
-        step.endpoint?.["@id"] || step.endpoint?.id || step.endpointId || "",
+      endpointId: step.endpoint?.id,
+      endpoint: step.endpoint,
       position: node.position,
       index: indexMap.get(node.id) || "0",
     }
@@ -284,11 +285,8 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
             id: node.id,
             name: step.name,
             description: step.description,
-            endpointId:
-              step.endpoint?.["@id"] ||
-              step.endpoint?.id ||
-              step.endpointId ||
-              "",
+            endpointId: step.endpoint?.id,
+            endpoint: step.endpoint,
             position: node.position,
             index: indexMap.get(node.id) || "0",
           }

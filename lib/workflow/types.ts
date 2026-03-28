@@ -1,10 +1,12 @@
 import { Paginate } from "@/lib/paginate"
+import { Endpoint } from "../endpoint/types"
 
 export interface WorkflowStep {
   id: string
   name: string
   description?: string
   endpointId: string
+  endpoint: Endpoint
   position: { x: number; y: number }
   index?: string
 }

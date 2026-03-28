@@ -28,7 +28,6 @@ export const getWorkflow = async (id: string): Promise<Workflow> => {
 export const putWorkflow = async (
   payload: UpdateWorkflowPayload
 ): Promise<Workflow> => {
-  console.log(payload)
   const response = await fetch(`/api/workflows/${payload.id}`, {
     method: "PUT",
     headers: {
