@@ -46,6 +46,12 @@ export default function WorkflowId() {
     await updateWorkflow(workflowData)
   }, [workflow, updateWorkflow])
 
+  const handleUpdate = useCallback(async () => {
+    fetchWorkflow(id as string).then((workflow) => {
+      setWorkflow(workflow)
+    })
+  }, [fetchWorkflow, id])
+
   if (!workflow) {
     return <div>Loading...</div>
   }
@@ -74,6 +80,7 @@ export default function WorkflowId() {
         />
       </div>
       <StepDrawer
+        onUpdate={handleUpdate}
         step={
           selectedStep
             ? {

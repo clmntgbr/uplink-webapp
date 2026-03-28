@@ -9,6 +9,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
+import { useStep } from "@/lib/step/context"
 import { stepSchema } from "@/lib/step/schema"
 import type { Step } from "@/lib/step/types"
 import { cn } from "@/lib/utils"
@@ -20,13 +21,20 @@ import { Field, FieldDescription, FieldLabel } from "./ui/field"
 import { Input } from "./ui/input"
 
 interface StepDrawerProps {
-  step?: Step | null
+  step: Step | null
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  onUpdate: () => void
 }
 
-export function StepDrawer({ step, isOpen, onOpenChange }: StepDrawerProps) {
+export function StepDrawer({
+  step,
+  isOpen,
+  onOpenChange,
+  onUpdate,
+}: StepDrawerProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const { updateStep } = useStep()
 
   const {
     register,
@@ -41,9 +49,11 @@ export function StepDrawer({ step, isOpen, onOpenChange }: StepDrawerProps) {
   })
 
   const onSubmit = async (data: z.infer<typeof stepSchema>) => {
+    if (!step) return
     setIsLoading(true)
-    console.log(data)
+    await updateStep(step.id, { ...data, id: step.id })
     setIsLoading(false)
+    onUpdate()
   }
 
   const onClose = () => {

@@ -1,6 +1,7 @@
 import { Toaster } from "@/components/ui/sonner"
 import { EndpointProvider } from "@/lib/endpoint/provider"
 import { ProjectProvider } from "@/lib/project/provider"
+import { StepProvider } from "@/lib/step/provider"
 import { ThemeProvider } from "@/lib/theme/theme-provider"
 import { UserProvider } from "@/lib/user/provider"
 import { WorkflowProvider } from "@/lib/workflow/provider"
@@ -21,13 +22,15 @@ export default function PrivateLayout({
         <ProjectProvider>
           <EndpointProvider>
             <WorkflowProvider>
-              <div className="mx-auto px-0">{children}</div>
-              <Toaster
-                richColors
-                expand={false}
-                position="top-right"
-                closeButton
-              />
+              <StepProvider>
+                <div className="mx-auto px-0">{children}</div>
+                <Toaster
+                  richColors
+                  expand={false}
+                  position="top-right"
+                  closeButton
+                />
+              </StepProvider>
             </WorkflowProvider>
           </EndpointProvider>
         </ProjectProvider>
