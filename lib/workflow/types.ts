@@ -6,6 +6,7 @@ export interface WorkflowStep {
   description?: string
   endpointId: string
   position: { x: number; y: number }
+  index?: string
 }
 
 export interface WorkflowConnection {
@@ -32,6 +33,7 @@ export interface CreateWorkflowPayload {
 }
 
 export interface UpdateWorkflowPayload {
+  id?: string
   name?: string
   description?: string
   steps?: WorkflowStep[]

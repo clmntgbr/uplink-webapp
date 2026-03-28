@@ -13,6 +13,7 @@ import {
 
 function StepNode({ data, selected }: NodeProps) {
   const step = data.step as Step
+  const index = data.index as string | undefined
 
   return (
     <div className="group">
@@ -26,7 +27,12 @@ function StepNode({ data, selected }: NodeProps) {
           minWidth: "300px",
         }}
       >
-        <div className="flex flex-row items-center px-3">
+        <div className="flex flex-row items-center px-3 gap-3">
+          {index && (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+              {index}
+            </div>
+          )}
           <CardContent
             className={cn(
               "flex h-12 w-12 shrink-0 items-center justify-center rounded-md p-0 " +

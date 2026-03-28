@@ -4,17 +4,22 @@ import EndpointsLibrary from "@/components/endpoints-library"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import WorkflowCanvas, { WorkflowCanvasRef } from "@/components/workflow-canvas"
+import { useWorkflow } from "@/lib/workflow/context"
 import { Workflow, WorkflowStep } from "@/lib/workflow/types"
 import { Save } from "lucide-react"
+import { useParams } from "next/navigation"
 import { useCallback, useRef, useState } from "react"
 
 export default function WorkflowId() {
   const canvasRef = useRef<WorkflowCanvasRef>(null)
 
+  const { id } = useParams()
+
+  const { updateWorkflow } = useWorkflow()
   const [selectedStep, setSelectedStep] = useState<WorkflowStep | null>(null)
 
   const [workflow, setWorkflow] = useState<Workflow>({
-    id: "new",
+    id: id as string,
     name: "New Workflow",
     description: "Build your workflow by dragging steps onto the canvas",
     steps: [],
@@ -29,12 +34,14 @@ export default function WorkflowId() {
     setSelectedStep(step)
   }, [])
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     const workflowData = {
       ...workflow,
     }
+
+    await updateWorkflow(workflowData)
     console.log(JSON.stringify(workflowData, null, 2))
-  }, [workflow])
+  }, [workflow, updateWorkflow])
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
@@ -66,6 +73,12 @@ export default function WorkflowId() {
             <ScrollArea className="flex-1">
               <div className="space-y-6 p-4">
                 <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Index
+                    </label>
+                    <p className="text-sm font-medium">{selectedStep.index}</p>
+                  </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">
                       Name

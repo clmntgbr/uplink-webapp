@@ -6,4 +6,6 @@ export interface Step {
   description?: string
   endpoint: Endpoint
   endpointId?: string
+  index?: string
+  position: { x: number; y: number }
 }

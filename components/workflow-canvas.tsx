@@ -65,6 +65,7 @@ function workflowToReactFlow(workflow?: Workflow): {
         description: workflowStep.description,
         endpointId: workflowStep.endpointId,
       },
+      index: workflowStep.index,
     },
   }))
 
@@ -79,11 +80,67 @@ function workflowToReactFlow(workflow?: Workflow): {
   return { nodes, edges }
 }
 
+function calculateStepIndexes(
+  nodes: Node[],
+  edges: Edge[]
+): Map<string, string> {
+  const indexMap = new Map<string, string>()
+
+  const incomingEdges = new Map<string, string[]>()
+  edges.forEach((edge) => {
+    if (!incomingEdges.has(edge.target)) {
+      incomingEdges.set(edge.target, [])
+    }
+    incomingEdges.get(edge.target)!.push(edge.source)
+  })
+
+  const rootNodes = nodes.filter(
+    (node) =>
+      !incomingEdges.has(node.id) || incomingEdges.get(node.id)!.length === 0
+  )
+
+  const queue: Array<{ nodeId: string; index: string }> = rootNodes.map(
+    (node, i) => ({
+      nodeId: node.id,
+      index: String(i + 1),
+    })
+  )
+
+  const visited = new Set<string>()
+
+  while (queue.length > 0) {
+    const { nodeId, index } = queue.shift()!
+
+    if (visited.has(nodeId)) continue
+    visited.add(nodeId)
+
+    indexMap.set(nodeId, index)
+
+    const outgoingEdges = edges.filter((edge) => edge.source === nodeId)
+
+    if (outgoingEdges.length === 1) {
+      const targetId = outgoingEdges[0].target
+      const baseIndex = Math.floor(Number.parseFloat(index))
+      queue.push({ nodeId: targetId, index: String(baseIndex + 1) })
+    } else if (outgoingEdges.length > 1) {
+      outgoingEdges.forEach((edge, i) => {
+        const baseIndex = Math.floor(Number.parseFloat(index))
+        const subIndex = `${baseIndex + 1}.${i + 1}`
+        queue.push({ nodeId: edge.target, index: subIndex })
+      })
+    }
+  }
+
+  return indexMap
+}
+
 function reactFlowToWorkflow(
   nodes: Node[],
   edges: Edge[],
   currentWorkflow?: Workflow
 ): Workflow {
+  const indexMap = calculateStepIndexes(nodes, edges)
+
   const steps: WorkflowStep[] = nodes.map((node) => {
     const step = node.data.step as Step
     return {
@@ -93,6 +150,7 @@ function reactFlowToWorkflow(
       endpointId:
         step.endpoint?.["@id"] || step.endpoint?.id || step.endpointId || "",
       position: node.position,
+      index: indexMap.get(node.id) || "0",
     }
   })
 
@@ -133,14 +191,21 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           edges,
           workflowRef.current
         )
-        console.log("Workflow update - edges:", edges)
-        console.log(
-          "Workflow update - connections:",
-          updatedWorkflow.connections
-        )
+
         onWorkflowChangeRef.current(updatedWorkflow)
       }
     }, [nodes, edges])
+
+    const nodesWithIndexes = nodes.map((node) => {
+      const indexMap = calculateStepIndexes(nodes, edges)
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          index: indexMap.get(node.id) || "0",
+        },
+      }
+    })
 
     useImperativeHandle(ref, () => ({}))
 
@@ -190,6 +255,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           description: `${endpoint.path}`,
           endpoint,
           endpointId: endpoint.id,
+          position,
         }
 
         const newNode: Node = {
@@ -213,17 +279,23 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
       (_: React.MouseEvent, node: Node) => {
         if (onStepSelect) {
           const step = node.data.step as Step
+          const indexMap = calculateStepIndexes(nodes, edges)
           const workflowStep: WorkflowStep = {
             id: node.id,
             name: step.name,
             description: step.description,
-            endpointId: step.endpoint.id,
+            endpointId:
+              step.endpoint?.["@id"] ||
+              step.endpoint?.id ||
+              step.endpointId ||
+              "",
             position: node.position,
+            index: indexMap.get(node.id) || "0",
           }
           onStepSelect(workflowStep)
         }
       },
-      [onStepSelect]
+      [onStepSelect, nodes, edges]
     )
 
     const handlePaneClick = useCallback(() => {
@@ -249,7 +321,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     return (
       <div ref={reactFlowWrapper} className="h-full flex-1">
         <ReactFlow
-          nodes={nodes}
+          nodes={nodesWithIndexes}
           edges={edges}
           onNodesChange={handleNodesChange}
           onEdgesChange={handleEdgesChange}
