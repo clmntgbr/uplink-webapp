@@ -81,6 +81,7 @@ export default function WorkflowId() {
       </div>
       <StepDrawer
         onUpdate={handleUpdate}
+        workflowId={workflow.id}
         step={
           selectedStep
             ? {

@@ -22,6 +22,7 @@ import { Input } from "./ui/input"
 
 interface StepDrawerProps {
   step: Step | null
+  workflowId: string | undefined
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   onUpdate: () => void
@@ -29,6 +30,7 @@ interface StepDrawerProps {
 
 export function StepDrawer({
   step,
+  workflowId,
   isOpen,
   onOpenChange,
   onUpdate,
@@ -51,7 +53,7 @@ export function StepDrawer({
   const onSubmit = async (data: z.infer<typeof stepSchema>) => {
     if (!step) return
     setIsLoading(true)
-    await updateStep(step.id, { ...data, id: step.id })
+    await updateStep(step.id, { ...data, id: step.id, workflowId })
     setIsLoading(false)
     onUpdate()
   }

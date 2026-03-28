@@ -179,11 +179,23 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
     const onWorkflowChangeRef = useRef(onWorkflowChange)
     const workflowRef = useRef(workflow)
+    const isInternalUpdateRef = useRef(false)
 
     useEffect(() => {
       onWorkflowChangeRef.current = onWorkflowChange
       workflowRef.current = workflow
     })
+
+    useEffect(() => {
+      if (isInternalUpdateRef.current) {
+        isInternalUpdateRef.current = false
+        return
+      }
+      
+      const newState = workflowToReactFlow(workflow)
+      setNodes(newState.nodes)
+      setEdges(newState.edges)
+    }, [workflow, setNodes, setEdges])
 
     useEffect(() => {
       if (onWorkflowChangeRef.current) {
@@ -193,6 +205,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           workflowRef.current
         )
 
+        isInternalUpdateRef.current = true
         onWorkflowChangeRef.current(updatedWorkflow)
       }
     }, [nodes, edges])
