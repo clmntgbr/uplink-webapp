@@ -1,8 +1,8 @@
 "use client"
 
 import EndpointsLibrary from "@/components/endpoints-library"
+import { StepDrawer } from "@/components/step-drawer"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import WorkflowCanvas, { WorkflowCanvasRef } from "@/components/workflow-canvas"
 import { useWorkflow } from "@/lib/workflow/context"
 import { Workflow, WorkflowStep } from "@/lib/workflow/types"
@@ -17,6 +17,7 @@ export default function WorkflowId() {
 
   const { updateWorkflow, fetchWorkflow } = useWorkflow()
   const [selectedStep, setSelectedStep] = useState<WorkflowStep | null>(null)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
   const [workflow, setWorkflow] = useState<Workflow | null>(null)
 
@@ -32,6 +33,9 @@ export default function WorkflowId() {
 
   const handleStepSelect = useCallback((step: WorkflowStep | null) => {
     setSelectedStep(step)
+    if (step) {
+      setIsDrawerOpen(true)
+    }
   }, [])
 
   const handleSave = useCallback(async () => {
@@ -68,48 +72,23 @@ export default function WorkflowId() {
           onWorkflowChange={handleWorkflowChange}
           onStepSelect={handleStepSelect}
         />
-        {selectedStep && (
-          <aside className="flex w-80 flex-col border-l border-border bg-background">
-            <div className="border-b border-border px-4 py-3">
-              <h3 className="text-sm font-semibold">Step Properties</h3>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="space-y-6 p-4">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Index
-                    </label>
-                    <p className="text-sm font-medium">{selectedStep.index}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Name
-                    </label>
-                    <p className="text-sm font-medium">{selectedStep.name}</p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Endpoint
-                    </label>
-                    <p className="font-mono text-xs">
-                      {selectedStep.description}
-                    </p>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">
-                      Endpoint ID
-                    </label>
-                    <p className="font-mono text-xs">
-                      {selectedStep.endpointId}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </ScrollArea>
-          </aside>
-        )}
       </div>
+      <StepDrawer
+        step={
+          selectedStep
+            ? {
+                id: selectedStep.id,
+                name: selectedStep.name,
+                description: selectedStep.description,
+                endpoint: selectedStep.endpoint,
+                endpointId: selectedStep.endpointId,
+                position: selectedStep.position,
+              }
+            : null
+        }
+        isOpen={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+      />
     </div>
   )
 }

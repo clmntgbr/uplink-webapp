@@ -21,7 +21,7 @@ function StepNode({ data, selected }: NodeProps) {
         size="sm"
         className={cn(
           "w-full transition-all",
-          selected && "py-3 shadow-lg ring-2 ring-primary"
+          selected && "py-3 shadow-lg ring-1 ring-primary"
         )}
         style={{
           minWidth: "300px",
