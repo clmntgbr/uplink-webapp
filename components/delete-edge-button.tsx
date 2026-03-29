@@ -1,4 +1,3 @@
-import { X } from "lucide-react"
 import {
   BaseEdge,
   EdgeLabelRenderer,
@@ -6,6 +5,7 @@ import {
   getSmoothStepPath,
   useReactFlow,
 } from "@xyflow/react"
+import { Trash2 } from "lucide-react"
 
 export default function DeleteEdgeButton({
   id,
@@ -46,10 +46,10 @@ export default function DeleteEdgeButton({
           className="nodrag nopan"
         >
           <button
-            className="flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:bg-destructive hover:text-destructive-foreground hover:border-destructive"
+            className="hover:text-destructive-foreground flex h-5 w-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm transition-colors hover:cursor-pointer hover:border-gray-400 hover:bg-gray-100"
             onClick={onEdgeClick}
           >
-            <X className="h-3 w-3" />
+            <Trash2 className="h-3 w-3" />
           </button>
         </div>
       </EdgeLabelRenderer>

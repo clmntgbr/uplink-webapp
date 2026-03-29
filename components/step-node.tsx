@@ -23,9 +23,6 @@ function StepNode({ data, selected }: NodeProps) {
         }}
       >
         <div className="flex flex-row items-center gap-3 px-3">
-          {index && (
-            <div className="text-xs text-muted-foreground">{index}</div>
-          )}
           <Badge
             variant="outline"
             className={cn(GetMethodColor(step.endpoint?.method))}
