@@ -370,7 +370,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           edgeTypes={edgeTypes}
           fitView
           snapToGrid
-          snapGrid={[20, 20]}
+          snapGrid={[5, 5]}
           deleteKeyCode="Delete"
           multiSelectionKeyCode="Shift"
           elementsSelectable={true}
