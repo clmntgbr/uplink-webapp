@@ -10,6 +10,7 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer"
 import { useEndpoint } from "@/lib/endpoint/context"
+import { GetMethodColor } from "@/lib/method-color"
 import { useStep } from "@/lib/step/context"
 import { stepSchema } from "@/lib/step/schema"
 import type { Step } from "@/lib/step/types"
@@ -18,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import z from "zod"
+import { Badge } from "./ui/badge"
 import { Field, FieldDescription, FieldLabel } from "./ui/field"
 import { Input } from "./ui/input"
 import {
@@ -93,7 +95,7 @@ export function StepDrawer({
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
-      <DrawerContent className="flex h-full flex-col">
+      <DrawerContent className="flex h-full w-[35vw]! max-w-[35vw]! flex-col">
         <DrawerHeader className="shrink-0">
           <div className="flex items-center gap-3">
             <div className="flex-1">
@@ -158,8 +160,21 @@ export function StepDrawer({
                       <SelectContent>
                         {endpoints.members.map((endpoint) => (
                           <SelectItem key={endpoint.id} value={endpoint.id}>
-                            <span className="font-mono text-xs">
-                              {endpoint.method} {endpoint.path}
+                            <span className="flex flex-row items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={cn(GetMethodColor(endpoint.method))}
+                              >
+                                {endpoint.method}
+                              </Badge>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-xs font-medium text-foreground">
+                                  {endpoint.name}
+                                </p>
+                              </div>
+                              <code className="ml-auto inline-block max-w-[150px] shrink-0 truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
+                                {endpoint.path}
+                              </code>
                             </span>
                           </SelectItem>
                         ))}

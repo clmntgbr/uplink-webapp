@@ -34,9 +34,7 @@ function StepNode({ data, selected }: NodeProps) {
             {step.endpoint?.method}
           </Badge>
           <div className="max-w-[400px] min-w-0 flex-1">
-            <p className="truncate text-base font-semibold">
-              {step.name + step.name}
-            </p>
+            <p className="truncate text-base font-semibold">{step.name}</p>
           </div>
           <code className="ml-auto inline-block max-w-[150px] shrink-0 truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
             {step.endpoint?.path}
