@@ -8,7 +8,6 @@ import { Card } from "./ui/card"
 
 function StepNode({ data, selected }: NodeProps) {
   const step = data.step as Step
-  const index = data.index as string | undefined
 
   return (
     <div className="group">
@@ -26,7 +25,7 @@ function StepNode({ data, selected }: NodeProps) {
           >
             {step.endpoint?.method}
           </Badge>
-          <div className="max-w-[300px] min-w-0 flex-1">
+          <div className="max-w-[400px] min-w-0 flex-1">
             <p className="truncate text-base font-semibold">
               {step.name + step.name}
             </p>
