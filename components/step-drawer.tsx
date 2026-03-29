@@ -47,15 +47,22 @@ export function StepDrawer({
     resolver: zodResolver(stepSchema),
     defaultValues: {
       name: step?.name,
+      description: step?.description,
     },
   })
 
   const onSubmit = async (data: z.infer<typeof stepSchema>) => {
     if (!step) return
     setIsLoading(true)
-    await updateStep(step.id, { ...data, id: step.id, workflowId })
+    await updateStep(step.id, {
+      ...data,
+      id: step.id,
+      workflowId,
+      description: data.description,
+    })
     setIsLoading(false)
     onUpdate()
+    onClose()
   }
 
   const onClose = () => {
@@ -67,9 +74,10 @@ export function StepDrawer({
     if (isOpen) {
       reset({
         name: step?.name,
+        description: step?.description,
       })
     }
-  }, [isOpen, step?.name, reset])
+  }, [isOpen, step?.name, step?.description, reset])
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
@@ -101,6 +109,22 @@ export function StepDrawer({
                   required
                   {...register("name")}
                   placeholder="Enter the step name"
+                />
+                <FieldDescription>The name of the step.</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel
+                  htmlFor="input-field-name"
+                  className={cn(errors.description && "text-destructive")}
+                >
+                  Description <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Input
+                  id="input-field-description"
+                  type="text"
+                  required
+                  {...register("description")}
+                  placeholder="Enter the step description"
                 />
                 <FieldDescription>The name of the step.</FieldDescription>
               </Field>
