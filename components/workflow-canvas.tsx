@@ -179,7 +179,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
     const onWorkflowChangeRef = useRef(onWorkflowChange)
     const workflowRef = useRef(workflow)
-    const isInternalUpdateRef = useRef(false)
+    const workflowIdRef = useRef(workflow?.id)
 
     useEffect(() => {
       onWorkflowChangeRef.current = onWorkflowChange
@@ -187,14 +187,25 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     })
 
     useEffect(() => {
-      if (isInternalUpdateRef.current) {
-        isInternalUpdateRef.current = false
-        return
+      if (workflow?.id !== workflowIdRef.current) {
+        workflowIdRef.current = workflow?.id
+        const newState = workflowToReactFlow(workflow)
+        setNodes(newState.nodes)
+        setEdges(newState.edges)
+      } else {
+        const newState = workflowToReactFlow(workflow)
+        const currentNodesJson = JSON.stringify(nodes.map(n => ({ id: n.id, data: n.data })))
+        const newNodesJson = JSON.stringify(newState.nodes.map(n => ({ id: n.id, data: n.data })))
+        
+        if (currentNodesJson !== newNodesJson) {
+          setNodes(newState.nodes)
+        }
+        
+        if (JSON.stringify(edges) !== JSON.stringify(newState.edges)) {
+          setEdges(newState.edges)
+        }
       }
-      
-      const newState = workflowToReactFlow(workflow)
-      setNodes(newState.nodes)
-      setEdges(newState.edges)
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workflow, setNodes, setEdges])
 
     useEffect(() => {
@@ -205,7 +216,6 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           workflowRef.current
         )
 
-        isInternalUpdateRef.current = true
         onWorkflowChangeRef.current(updatedWorkflow)
       }
     }, [nodes, edges])

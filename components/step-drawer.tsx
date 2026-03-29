@@ -9,16 +9,24 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer"
+import { useEndpoint } from "@/lib/endpoint/context"
 import { useStep } from "@/lib/step/context"
 import { stepSchema } from "@/lib/step/schema"
 import type { Step } from "@/lib/step/types"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useEffect, useState } from "react"
-import { useForm } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 import z from "zod"
 import { Field, FieldDescription, FieldLabel } from "./ui/field"
 import { Input } from "./ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select"
 
 interface StepDrawerProps {
   step: Step | null
@@ -37,17 +45,20 @@ export function StepDrawer({
 }: StepDrawerProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { updateStep } = useStep()
+  const { endpoints } = useEndpoint()
 
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<z.infer<typeof stepSchema>>({
     resolver: zodResolver(stepSchema),
     defaultValues: {
       name: step?.name,
       description: step?.description,
+      endpointId: step?.endpointId,
     },
   })
 
@@ -58,7 +69,7 @@ export function StepDrawer({
       ...data,
       id: step.id,
       workflowId,
-      description: data.description,
+      endpointId: data.endpointId,
     })
     setIsLoading(false)
     onUpdate()
@@ -71,13 +82,14 @@ export function StepDrawer({
   }
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && step) {
       reset({
-        name: step?.name,
-        description: step?.description,
+        name: step.name,
+        description: step.description,
+        endpointId: step.endpointId,
       })
     }
-  }, [isOpen, step?.name, step?.description, reset])
+  }, [isOpen, step, reset])
 
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
@@ -127,6 +139,35 @@ export function StepDrawer({
                   placeholder="Enter the step description"
                 />
                 <FieldDescription>The name of the step.</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel
+                  htmlFor="input-field-endpoint"
+                  className={cn(errors.endpointId && "text-destructive")}
+                >
+                  Endpoint <span className="text-destructive">*</span>
+                </FieldLabel>
+                <Controller
+                  name="endpointId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select an endpoint" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {endpoints.members.map((endpoint) => (
+                          <SelectItem key={endpoint.id} value={endpoint.id}>
+                            <span className="font-mono text-xs">
+                              {endpoint.method} {endpoint.path}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FieldDescription>The endpoint for this step.</FieldDescription>
               </Field>
             </div>
           </div>
