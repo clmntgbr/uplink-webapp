@@ -26,20 +26,20 @@ function StepNode({ data, selected }: NodeProps) {
           selected && "py-3 shadow-lg ring-1 ring-primary"
         )}
       >
-        <div className="flex flex-row items-center gap-3 px-3">
+        <div className="flex flex-row items-center px-3">
           <Badge
             variant="outline"
             className={cn(GetMethodColor(step.endpoint?.method))}
           >
             {step.endpoint?.method}
           </Badge>
-          <div className="max-w-[400px] min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-col gap-0 pl-3">
             <p className="truncate text-base font-semibold">{step.name}</p>
+            <code className="inline-block w-fit truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
+              {step.endpoint?.path}
+            </code>
           </div>
-          <code className="ml-auto inline-block max-w-[150px] shrink-0 truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
-            {step.endpoint?.path}
-          </code>
-          <div>
+          <div className="flex items-center justify-center pl-9">
             <Button variant="outline" size="icon" onClick={handleEditClick}>
               <SquarePenIcon />
             </Button>
