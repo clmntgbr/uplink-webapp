@@ -46,9 +46,21 @@ export default function WorkflowId() {
     await updateWorkflow(workflowData)
   }, [workflow, updateWorkflow])
 
-  const handleUpdate = useCallback(async () => {
-    fetchWorkflow(id as string).then((workflow) => {
-      setWorkflow(workflow)
+  const handleStepUpdate = useCallback(async () => {
+    const updatedWorkflow = await fetchWorkflow(id as string)
+    setWorkflow(prev => {
+      if (!prev) return updatedWorkflow
+      return {
+        ...prev,
+        steps: updatedWorkflow.steps?.map(newStep => {
+          const oldStep = prev.steps?.find(s => s.id === newStep.id)
+          return {
+            ...newStep,
+            position: oldStep?.position || newStep.position,
+          }
+        }),
+        connections: prev.connections,
+      }
     })
   }, [fetchWorkflow, id])
 
@@ -80,7 +92,7 @@ export default function WorkflowId() {
         />
       </div>
       <StepDrawer
-        onUpdate={handleUpdate}
+        onUpdate={handleStepUpdate}
         workflowId={workflow.id}
         step={
           selectedStep

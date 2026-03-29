@@ -32,9 +32,11 @@ import {
   useState,
 } from "react"
 import { v4 as uuidv4 } from "uuid"
+import DeleteEdgeButton from "./delete-edge-button"
 import StepNode from "./step-node"
 
 const nodeTypes = { stepNode: StepNode }
+const edgeTypes = { default: DeleteEdgeButton }
 
 export type { Workflow, WorkflowConnection, WorkflowStep }
 
@@ -74,7 +76,7 @@ function workflowToReactFlow(workflow?: Workflow): {
     id: conn.id,
     source: conn.from,
     target: conn.to,
-    type: "smoothstep",
+    type: "default",
     markerEnd: { type: MarkerType.ArrowClosed },
   }))
 
@@ -179,7 +181,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
     const onWorkflowChangeRef = useRef(onWorkflowChange)
     const workflowRef = useRef(workflow)
-    const workflowIdRef = useRef(workflow?.id)
+    const prevStepsRef = useRef<string>("")
 
     useEffect(() => {
       onWorkflowChangeRef.current = onWorkflowChange
@@ -187,26 +189,37 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     })
 
     useEffect(() => {
-      if (workflow?.id !== workflowIdRef.current) {
-        workflowIdRef.current = workflow?.id
-        const newState = workflowToReactFlow(workflow)
-        setNodes(newState.nodes)
-        setEdges(newState.edges)
-      } else {
-        const newState = workflowToReactFlow(workflow)
-        const currentNodesJson = JSON.stringify(nodes.map(n => ({ id: n.id, data: n.data })))
-        const newNodesJson = JSON.stringify(newState.nodes.map(n => ({ id: n.id, data: n.data })))
-        
-        if (currentNodesJson !== newNodesJson) {
-          setNodes(newState.nodes)
-        }
-        
-        if (JSON.stringify(edges) !== JSON.stringify(newState.edges)) {
-          setEdges(newState.edges)
-        }
-      }
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [workflow, setNodes, setEdges])
+      if (!workflow?.steps) return
+      
+      const stepsDataJson = JSON.stringify(
+        workflow.steps.map(s => ({ id: s.id, name: s.name, description: s.description, endpoint: s.endpoint }))
+      )
+      
+      if (stepsDataJson === prevStepsRef.current) return
+      prevStepsRef.current = stepsDataJson
+      
+      setNodes(currentNodes => 
+        currentNodes.map(node => {
+          const workflowStep = workflow.steps?.find(s => s.id === node.id)
+          if (workflowStep && node.data.step) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                step: {
+                  ...(node.data.step as Step),
+                  name: workflowStep.name,
+                  description: workflowStep.description,
+                  endpoint: workflowStep.endpoint,
+                  endpointId: workflowStep.endpointId,
+                }
+              }
+            }
+          }
+          return node
+        })
+      )
+    }, [workflow?.steps, setNodes])
 
     useEffect(() => {
       if (onWorkflowChangeRef.current) {
@@ -246,7 +259,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
             id: uuidv4(),
             source: params.source!,
             target: params.target!,
-            type: "smoothstep",
+            type: "default",
             markerEnd: { type: MarkerType.ArrowClosed },
           }
           const newEdges = [...eds, newEdge]
@@ -354,11 +367,19 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           onNodeClick={handleNodeClick}
           onPaneClick={handlePaneClick}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           snapToGrid
           snapGrid={[20, 20]}
+          deleteKeyCode="Delete"
+          multiSelectionKeyCode="Shift"
+          elementsSelectable={true}
+          nodesConnectable={true}
+          nodesDraggable={true}
+          edgesFocusable={true}
+          edgesReconnectable={false}
           defaultEdgeOptions={{
-            type: "smoothstep",
+            type: "default",
             markerEnd: { type: MarkerType.ArrowClosed },
           }}
           connectionLineType={ConnectionLineType.SmoothStep}
