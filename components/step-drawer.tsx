@@ -16,6 +16,7 @@ import { stepSchema } from "@/lib/step/schema"
 import type { Step } from "@/lib/step/types"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { LinkIcon } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Controller, useForm } from "react-hook-form"
 import z from "zod"
@@ -96,10 +97,18 @@ export function StepDrawer({
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange} direction="right">
       <DrawerContent className="flex h-full w-[35vw]! max-w-[35vw]! flex-col">
-        <DrawerHeader className="shrink-0">
+        <DrawerHeader className="mb-4 shrink-0 border-b">
           <div className="flex items-center gap-3">
             <div className="flex-1">
-              <DrawerTitle>{step?.name}</DrawerTitle>
+              <DrawerTitle className="flex items-center gap-3">
+                <LinkIcon className="size-10 rounded-full bg-primary p-2 text-primary-foreground" />
+                <div className="flex flex-col items-start">
+                  <span className="text-lg font-semibold">{step?.name}</span>
+                  <span className="truncate text-xs font-medium text-muted-foreground">
+                    {step?.description}
+                  </span>
+                </div>
+              </DrawerTitle>
             </div>
           </div>
         </DrawerHeader>
