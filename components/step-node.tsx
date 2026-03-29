@@ -2,12 +2,20 @@ import { GetMethodColor } from "@/lib/method-color"
 import type { Step } from "@/lib/step/types"
 import { cn } from "@/lib/utils"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
+import { SquarePenIcon } from "lucide-react"
 import { memo } from "react"
 import { Badge } from "./ui/badge"
+import { Button } from "./ui/button"
 import { Card } from "./ui/card"
 
 function StepNode({ data, selected }: NodeProps) {
   const step = data.step as Step
+  const onEditClick = data.onEditClick as (() => void) | undefined
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onEditClick?.()
+  }
 
   return (
     <div className="group">
@@ -33,6 +41,11 @@ function StepNode({ data, selected }: NodeProps) {
           <code className="ml-auto inline-block max-w-[150px] shrink-0 truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
             {step.endpoint?.path}
           </code>
+          <div>
+            <Button variant="outline" size="icon" onClick={handleEditClick}>
+              <SquarePenIcon />
+            </Button>
+          </div>
         </div>
       </Card>
 

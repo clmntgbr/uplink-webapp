@@ -69,6 +69,7 @@ function workflowToReactFlow(workflow?: Workflow): {
         endpoint: workflowStep.endpoint,
       },
       index: workflowStep.index,
+      onEditClick: undefined,
     },
   }))
 
@@ -190,17 +191,22 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
 
     useEffect(() => {
       if (!workflow?.steps) return
-      
+
       const stepsDataJson = JSON.stringify(
-        workflow.steps.map(s => ({ id: s.id, name: s.name, description: s.description, endpoint: s.endpoint }))
+        workflow.steps.map((s) => ({
+          id: s.id,
+          name: s.name,
+          description: s.description,
+          endpoint: s.endpoint,
+        }))
       )
-      
+
       if (stepsDataJson === prevStepsRef.current) return
       prevStepsRef.current = stepsDataJson
-      
-      setNodes(currentNodes => 
-        currentNodes.map(node => {
-          const workflowStep = workflow.steps?.find(s => s.id === node.id)
+
+      setNodes((currentNodes) =>
+        currentNodes.map((node) => {
+          const workflowStep = workflow.steps?.find((s) => s.id === node.id)
           if (workflowStep && node.data.step) {
             return {
               ...node,
@@ -212,8 +218,8 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
                   description: workflowStep.description,
                   endpoint: workflowStep.endpoint,
                   endpointId: workflowStep.endpointId,
-                }
-              }
+                },
+              },
             }
           }
           return node
@@ -233,6 +239,26 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
       }
     }, [nodes, edges])
 
+    const handleEditClick = useCallback(
+      (node: Node) => {
+        if (onStepSelect) {
+          const step = node.data.step as Step
+          const indexMap = calculateStepIndexes(nodes, edges)
+          const workflowStep: WorkflowStep = {
+            id: node.id,
+            name: step.name,
+            description: step.description,
+            endpointId: step.endpoint?.id,
+            endpoint: step.endpoint,
+            position: node.position,
+            index: indexMap.get(node.id) || "0",
+          }
+          onStepSelect(workflowStep)
+        }
+      },
+      [onStepSelect, nodes, edges]
+    )
+
     const nodesWithIndexes = nodes.map((node) => {
       const indexMap = calculateStepIndexes(nodes, edges)
       return {
@@ -240,6 +266,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
         data: {
           ...node.data,
           index: indexMap.get(node.id) || "0",
+          onEditClick: () => handleEditClick(node),
         },
       }
     })
@@ -312,26 +339,6 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
       [rfInstance, setNodes]
     )
 
-    const handleNodeClick = useCallback(
-      (_: React.MouseEvent, node: Node) => {
-        if (onStepSelect) {
-          const step = node.data.step as Step
-          const indexMap = calculateStepIndexes(nodes, edges)
-          const workflowStep: WorkflowStep = {
-            id: node.id,
-            name: step.name,
-            description: step.description,
-            endpointId: step.endpoint?.id,
-            endpoint: step.endpoint,
-            position: node.position,
-            index: indexMap.get(node.id) || "0",
-          }
-          onStepSelect(workflowStep)
-        }
-      },
-      [onStepSelect, nodes, edges]
-    )
-
     const handlePaneClick = useCallback(() => {
       if (onStepSelect) {
         onStepSelect(null)
@@ -364,7 +371,6 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           onInit={setRfInstance}
           onDrop={onDrop}
           onDragOver={onDragOver}
-          onNodeClick={handleNodeClick}
           onPaneClick={handlePaneClick}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
