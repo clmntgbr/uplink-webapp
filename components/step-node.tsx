@@ -24,7 +24,7 @@ function StepNode({ data, selected }: NodeProps) {
           selected && "py-3 shadow-lg ring-1 ring-primary"
         )}
         style={{
-          minWidth: "300px",
+          minWidth: "400px",
         }}
       >
         <div className="flex flex-row items-center gap-3 px-3">
@@ -48,7 +48,9 @@ function StepNode({ data, selected }: NodeProps) {
               {step.name}
             </CardTitle>
             <CardDescription className="truncate text-xs">
-              {step.description}
+              <code className="mt-1.5 inline-block max-w-full truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
+                {step.endpoint?.path}
+              </code>
             </CardDescription>
           </CardHeader>
         </div>
