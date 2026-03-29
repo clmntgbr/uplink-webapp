@@ -3,13 +3,8 @@ import type { Step } from "@/lib/step/types"
 import { cn } from "@/lib/utils"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
 import { memo } from "react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card"
+import { Badge } from "./ui/badge"
+import { Card, CardHeader, CardTitle } from "./ui/card"
 
 function StepNode({ data, selected }: NodeProps) {
   const step = data.step as Step
@@ -24,35 +19,27 @@ function StepNode({ data, selected }: NodeProps) {
           selected && "py-3 shadow-lg ring-1 ring-primary"
         )}
         style={{
-          minWidth: "400px",
+          minWidth: "500px",
         }}
       >
         <div className="flex flex-row items-center gap-3 px-3">
           {index && (
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-              {index}
-            </div>
+            <div className="text-xs text-muted-foreground">{index}</div>
           )}
-          <CardContent
-            className={cn(
-              "flex h-12 w-12 shrink-0 items-center justify-center rounded-full p-0 " +
-                GetMethodColor(step.endpoint?.method || "GET")
-            )}
+          <Badge
+            variant="outline"
+            className={cn(GetMethodColor(step.endpoint?.method))}
           >
-            <p className="font-bold" style={{ fontSize: "10px" }}>
-              {step.endpoint?.method || "GET"}
-            </p>
-          </CardContent>
-          <CardHeader className="flex-1 gap-0 group-data-[size=sm]/card:px-0">
+            {step.endpoint?.method}
+          </Badge>
+          <CardHeader className="min-w-0 flex-1 gap-0 py-0 group-data-[size=sm]/card:px-0">
             <CardTitle className="truncate text-base font-semibold">
               {step.name}
             </CardTitle>
-            <CardDescription className="truncate text-xs">
-              <code className="mt-1.5 inline-block max-w-full truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
-                {step.endpoint?.path}
-              </code>
-            </CardDescription>
           </CardHeader>
+          <code className="ml-auto inline-block max-w-[150px] shrink-0 truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
+            {step.endpoint?.path}
+          </code>
         </div>
       </Card>
 
