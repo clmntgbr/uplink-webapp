@@ -67,13 +67,10 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
     [fetchWorkflows]
   )
 
-  const updateWorkflow = useCallback(
-    async (payload: UpdateWorkflowPayload) => {
-      await putWorkflow(payload)
-      await fetchWorkflows()
-    },
-    [fetchWorkflows]
-  )
+  const updateWorkflow = useCallback(async (payload: UpdateWorkflowPayload) => {
+    await putWorkflow(payload)
+    // await fetchWorkflows()
+  }, [])
 
   const removeConnection = useCallback(async (id: string) => {
     await deleteConnection(id)
