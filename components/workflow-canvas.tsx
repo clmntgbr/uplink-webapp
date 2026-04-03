@@ -6,6 +6,8 @@ import type {
   WorkflowStep,
 } from "@/lib/workflow/types"
 import {
+  applyEdgeChanges,
+  applyNodeChanges,
   Background,
   BackgroundVariant,
   ConnectionLineType,
@@ -18,6 +20,7 @@ import {
   type Connection,
   type Edge,
   type EdgeChange,
+  type EdgeProps,
   type Node,
   type NodeChange,
   type ReactFlowInstance,
@@ -28,6 +31,7 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useMemo,
   useRef,
   useState,
 } from "react"
@@ -36,7 +40,6 @@ import DeleteEdgeButton from "./delete-edge-button"
 import StepNode from "./step-node"
 
 const nodeTypes = { stepNode: StepNode }
-const edgeTypes = { default: DeleteEdgeButton }
 
 export type { Workflow, WorkflowConnection, WorkflowStep }
 
@@ -46,6 +49,7 @@ interface WorkflowCanvasProps {
   workflow?: Workflow
   onWorkflowChange?: (workflow: Workflow) => void
   onStepSelect?: (step: WorkflowStep | null) => void
+  onSave?: (workflow: Workflow) => void | Promise<void>
 }
 
 function workflowToReactFlow(workflow?: Workflow): {
@@ -174,7 +178,10 @@ function reactFlowToWorkflow(
 }
 
 const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
-  function WorkflowCanvas({ workflow, onWorkflowChange, onStepSelect }, ref) {
+  function WorkflowCanvas(
+    { workflow, onWorkflowChange, onStepSelect, onSave },
+    ref
+  ) {
     const initialState = workflowToReactFlow(workflow)
     const [nodes, setNodes, onNodesChange] = useNodesState(initialState.nodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialState.edges)
@@ -182,11 +189,13 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
     const onWorkflowChangeRef = useRef(onWorkflowChange)
     const workflowRef = useRef(workflow)
+    const onSaveRef = useRef(onSave)
     const prevStepsRef = useRef<string>("")
 
     useEffect(() => {
       onWorkflowChangeRef.current = onWorkflowChange
       workflowRef.current = workflow
+      onSaveRef.current = onSave
     })
 
     useEffect(() => {
@@ -273,6 +282,28 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
 
     useImperativeHandle(ref, () => ({}))
 
+    const saveGraphSnapshot = useCallback((nextNodes: Node[], nextEdges: Edge[]) => {
+      const wf = reactFlowToWorkflow(
+        nextNodes,
+        nextEdges,
+        workflowRef.current
+      )
+      const save = onSaveRef.current
+      if (!save || !wf.id) return
+      void Promise.resolve(save(wf)).catch((err) =>
+        console.error("[workflow canvas] failed to save workflow", err)
+      )
+    }, [])
+
+    const edgeTypes = useMemo(
+      () => ({
+        default: (props: EdgeProps) => (
+          <DeleteEdgeButton {...props} onPersistGraph={saveGraphSnapshot} />
+        ),
+      }),
+      [saveGraphSnapshot]
+    )
+
     const isValidConnection = useCallback((connection: Connection | Edge) => {
       const source = "source" in connection ? connection.source : null
       const target = "target" in connection ? connection.target : null
@@ -281,6 +312,10 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
 
     const onConnect = useCallback(
       (params: Connection) => {
+        console.log("[workflow canvas] connection added", {
+          from: params.source,
+          to: params.target,
+        })
         setEdges((eds) => {
           const newEdge = {
             id: uuidv4(),
@@ -290,10 +325,11 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
             markerEnd: { type: MarkerType.ArrowClosed },
           }
           const newEdges = [...eds, newEdge]
+          saveGraphSnapshot(nodes, newEdges)
           return newEdges
         })
       },
-      [setEdges]
+      [setEdges, nodes, saveGraphSnapshot]
     )
 
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -331,12 +367,20 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           },
         }
 
+        console.log("[workflow canvas] step added from library", {
+          stepId: newNode.id,
+          endpointId: endpoint.id,
+          name: endpoint.name,
+          position,
+        })
+
         setNodes((nds) => {
           const updated = [...nds, newNode]
+          saveGraphSnapshot(updated, edges)
           return updated
         })
       },
-      [rfInstance, setNodes]
+      [rfInstance, setNodes, edges, saveGraphSnapshot]
     )
 
     const handlePaneClick = useCallback(() => {
@@ -347,16 +391,46 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
 
     const handleNodesChange = useCallback(
       (changes: NodeChange[]) => {
+        let shouldSave = false
+        for (const change of changes) {
+          if (change.type === "position" && change.dragging === false) {
+            console.log("[workflow canvas] step moved", {
+              stepId: change.id,
+              position: change.position,
+            })
+            shouldSave = true
+          } else if (change.type === "remove") {
+            console.log("[workflow canvas] step removed", { stepId: change.id })
+            shouldSave = true
+          }
+        }
+        if (shouldSave) {
+          const nextNodes = applyNodeChanges(changes, nodes)
+          saveGraphSnapshot(nextNodes, edges)
+        }
         onNodesChange(changes)
       },
-      [onNodesChange]
+      [onNodesChange, nodes, edges, saveGraphSnapshot]
     )
 
     const handleEdgesChange = useCallback(
       (changes: EdgeChange[]) => {
+        let shouldSave = false
+        for (const change of changes) {
+          if (change.type === "remove") {
+            console.log("[workflow canvas] connection removed (keyboard)", {
+              edgeId: change.id,
+            })
+            shouldSave = true
+          }
+        }
+        if (shouldSave) {
+          const nextEdges = applyEdgeChanges(changes, edges)
+          saveGraphSnapshot(nodes, nextEdges)
+        }
         onEdgesChange(changes)
       },
-      [onEdgesChange]
+      [onEdgesChange, nodes, edges, saveGraphSnapshot]
     )
 
     return (

@@ -38,22 +38,23 @@ export default function WorkflowId() {
     }
   }, [])
 
-  const handleSave = useCallback(async () => {
-    const workflowData = {
-      ...workflow,
-    }
-
-    await updateWorkflow(workflowData)
-  }, [workflow, updateWorkflow])
+  const handleSave = useCallback(
+    async (workflowPayload?: Workflow) => {
+      const workflowData = workflowPayload ?? workflow
+      if (!workflowData?.id) return
+      await updateWorkflow(workflowData)
+    },
+    [workflow, updateWorkflow]
+  )
 
   const handleStepUpdate = useCallback(async () => {
     const updatedWorkflow = await fetchWorkflow(id as string)
-    setWorkflow(prev => {
+    setWorkflow((prev) => {
       if (!prev) return updatedWorkflow
       return {
         ...prev,
-        steps: updatedWorkflow.steps?.map(newStep => {
-          const oldStep = prev.steps?.find(s => s.id === newStep.id)
+        steps: updatedWorkflow.steps?.map((newStep) => {
+          const oldStep = prev.steps?.find((s) => s.id === newStep.id)
           return {
             ...newStep,
             position: oldStep?.position || newStep.position,
@@ -77,7 +78,7 @@ export default function WorkflowId() {
             {workflow.description}
           </p>
         </div>
-        <Button onClick={handleSave} className="gap-2">
+        <Button onClick={() => void handleSave()} className="gap-2">
           <Save className="h-4 w-4" />
           Save Workflow
         </Button>
@@ -89,6 +90,7 @@ export default function WorkflowId() {
           workflow={workflow}
           onWorkflowChange={handleWorkflowChange}
           onStepSelect={handleStepSelect}
+          onSave={handleSave}
         />
       </div>
       <StepDrawer

@@ -4,11 +4,21 @@ import {
   EdgeProps,
   getSmoothStepPath,
   useReactFlow,
+  type Edge,
+  type Node,
 } from "@xyflow/react"
 import { Trash2 } from "lucide-react"
 
+type PersistGraph = (nodes: Node[], edges: Edge[]) => void
+
+type DeleteEdgeButtonProps = EdgeProps & {
+  onPersistGraph?: PersistGraph
+}
+
 export default function DeleteEdgeButton({
   id,
+  source,
+  target,
   sourceX,
   sourceY,
   targetX,
@@ -17,8 +27,9 @@ export default function DeleteEdgeButton({
   targetPosition,
   style = {},
   markerEnd,
-}: EdgeProps) {
-  const { setEdges } = useReactFlow()
+  onPersistGraph,
+}: DeleteEdgeButtonProps) {
+  const { setEdges, getNodes } = useReactFlow()
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -29,7 +40,16 @@ export default function DeleteEdgeButton({
   })
 
   const onEdgeClick = () => {
-    setEdges((edges) => edges.filter((edge) => edge.id !== id))
+    console.log("[workflow canvas] connection removed (trash button)", {
+      edgeId: id,
+      from: source,
+      to: target,
+    })
+    setEdges((edges) => {
+      const next = edges.filter((edge) => edge.id !== id)
+      onPersistGraph?.(getNodes(), next)
+      return next
+    })
   }
 
   return (
