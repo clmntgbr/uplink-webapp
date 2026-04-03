@@ -3,10 +3,18 @@
 import { useCallback, useEffect, useReducer } from "react"
 import { initPaginate } from "../paginate"
 import { useProject } from "../project/context"
-import { getWorkflow, getWorkflows, postWorkflow, putWorkflow } from "./api"
+import {
+  deleteConnection,
+  getWorkflow,
+  getWorkflows,
+  postConnection,
+  postWorkflow,
+  putWorkflow,
+} from "./api"
 import { WorkflowContext } from "./context"
 import { WorkflowReducer } from "./reducer"
 import {
+  CreateConnectionPayload,
   CreateWorkflowPayload,
   UpdateWorkflowPayload,
   Workflow,
@@ -67,6 +75,17 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
     [fetchWorkflows]
   )
 
+  const removeConnection = useCallback(async (id: string) => {
+    await deleteConnection(id)
+  }, [])
+
+  const addConnection = useCallback(
+    async (payload: CreateConnectionPayload) => {
+      await postConnection(payload)
+    },
+    []
+  )
+
   useEffect(() => {
     if (project?.id) {
       fetchWorkflows()
@@ -81,6 +100,8 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
         fetchWorkflow,
         createWorkflow,
         updateWorkflow,
+        removeConnection,
+        addConnection,
       }}
     >
       {children}

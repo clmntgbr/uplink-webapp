@@ -42,6 +42,12 @@ export interface UpdateWorkflowPayload {
   connections?: WorkflowConnection[]
 }
 
+export interface CreateConnectionPayload {
+  workflowId: string
+  from: string
+  to: string
+}
+
 export interface WorkflowState {
   workflows: Paginate<Workflow>
   isLoading: boolean

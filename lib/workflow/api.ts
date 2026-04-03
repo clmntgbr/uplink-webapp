@@ -1,5 +1,10 @@
 import { Paginate } from "@/lib/paginate"
-import { CreateWorkflowPayload, UpdateWorkflowPayload, Workflow } from "./types"
+import {
+  CreateConnectionPayload,
+  CreateWorkflowPayload,
+  UpdateWorkflowPayload,
+  Workflow,
+} from "./types"
 
 export const getWorkflows = async (): Promise<Paginate<Workflow>> => {
   const response = await fetch("/api/workflows", {
@@ -59,4 +64,33 @@ export const postWorkflow = async (
   }
 
   return response.json()
+}
+
+export const deleteConnection = async (id: string): Promise<void> => {
+  const response = await fetch(`/api/connections/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to delete connection")
+  }
+}
+
+export const postConnection = async (
+  payload: CreateConnectionPayload
+): Promise<void> => {
+  const response = await fetch(`/api/connections`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  })
+
+  if (!response.ok) {
+    throw new Error("Failed to create connection")
+  }
 }

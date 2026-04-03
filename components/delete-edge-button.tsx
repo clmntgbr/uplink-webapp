@@ -1,9 +1,9 @@
+import { useWorkflow } from "@/lib/workflow/context"
 import {
   BaseEdge,
   EdgeLabelRenderer,
   EdgeProps,
   getSmoothStepPath,
-  useReactFlow,
   type Edge,
   type Node,
 } from "@xyflow/react"
@@ -17,8 +17,6 @@ type DeleteEdgeButtonProps = EdgeProps & {
 
 export default function DeleteEdgeButton({
   id,
-  source,
-  target,
   sourceX,
   sourceY,
   targetX,
@@ -27,9 +25,8 @@ export default function DeleteEdgeButton({
   targetPosition,
   style = {},
   markerEnd,
-  onPersistGraph,
 }: DeleteEdgeButtonProps) {
-  const { setEdges, getNodes } = useReactFlow()
+  const { removeConnection } = useWorkflow()
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -40,16 +37,7 @@ export default function DeleteEdgeButton({
   })
 
   const onEdgeClick = () => {
-    console.log("[workflow canvas] connection removed (trash button)", {
-      edgeId: id,
-      from: source,
-      to: target,
-    })
-    setEdges((edges) => {
-      const next = edges.filter((edge) => edge.id !== id)
-      onPersistGraph?.(getNodes(), next)
-      return next
-    })
+    removeConnection(id)
   }
 
   return (

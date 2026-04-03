@@ -1,12 +1,12 @@
 import type { Endpoint } from "@/lib/endpoint/types"
 import type { Step } from "@/lib/step/types"
+import { useWorkflow } from "@/lib/workflow/context"
 import type {
   Workflow,
   WorkflowConnection,
   WorkflowStep,
 } from "@/lib/workflow/types"
 import {
-  applyEdgeChanges,
   applyNodeChanges,
   Background,
   BackgroundVariant,
@@ -19,7 +19,6 @@ import {
   useNodesState,
   type Connection,
   type Edge,
-  type EdgeChange,
   type EdgeProps,
   type Node,
   type NodeChange,
@@ -182,9 +181,10 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     { workflow, onWorkflowChange, onStepSelect, onSave },
     ref
   ) {
+    const { addConnection } = useWorkflow()
     const initialState = workflowToReactFlow(workflow)
     const [nodes, setNodes, onNodesChange] = useNodesState(initialState.nodes)
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialState.edges)
+    const [edges] = useEdgesState(initialState.edges)
     const reactFlowWrapper = useRef<HTMLDivElement>(null)
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
     const onWorkflowChangeRef = useRef(onWorkflowChange)
@@ -282,18 +282,21 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
 
     useImperativeHandle(ref, () => ({}))
 
-    const saveGraphSnapshot = useCallback((nextNodes: Node[], nextEdges: Edge[]) => {
-      const wf = reactFlowToWorkflow(
-        nextNodes,
-        nextEdges,
-        workflowRef.current
-      )
-      const save = onSaveRef.current
-      if (!save || !wf.id) return
-      void Promise.resolve(save(wf)).catch((err) =>
-        console.error("[workflow canvas] failed to save workflow", err)
-      )
-    }, [])
+    const saveGraphSnapshot = useCallback(
+      (nextNodes: Node[], nextEdges: Edge[]) => {
+        const wf = reactFlowToWorkflow(
+          nextNodes,
+          nextEdges,
+          workflowRef.current
+        )
+        const save = onSaveRef.current
+        if (!save || !wf.id) return
+        void Promise.resolve(save(wf)).catch((err) =>
+          console.error("[workflow canvas] failed to save workflow", err)
+        )
+      },
+      []
+    )
 
     const edgeTypes = useMemo(
       () => ({
@@ -312,24 +315,14 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
 
     const onConnect = useCallback(
       (params: Connection) => {
-        console.log("[workflow canvas] connection added", {
-          from: params.source,
-          to: params.target,
-        })
-        setEdges((eds) => {
-          const newEdge = {
-            id: uuidv4(),
-            source: params.source!,
-            target: params.target!,
-            type: "default",
-            markerEnd: { type: MarkerType.ArrowClosed },
-          }
-          const newEdges = [...eds, newEdge]
-          saveGraphSnapshot(nodes, newEdges)
-          return newEdges
+        if (!workflow?.id) return
+        addConnection({
+          workflowId: workflow?.id,
+          from: params.source!,
+          to: params.target!,
         })
       },
-      [setEdges, nodes, saveGraphSnapshot]
+      [addConnection, workflow?.id]
     )
 
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -413,33 +406,12 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
       [onNodesChange, nodes, edges, saveGraphSnapshot]
     )
 
-    const handleEdgesChange = useCallback(
-      (changes: EdgeChange[]) => {
-        let shouldSave = false
-        for (const change of changes) {
-          if (change.type === "remove") {
-            console.log("[workflow canvas] connection removed (keyboard)", {
-              edgeId: change.id,
-            })
-            shouldSave = true
-          }
-        }
-        if (shouldSave) {
-          const nextEdges = applyEdgeChanges(changes, edges)
-          saveGraphSnapshot(nodes, nextEdges)
-        }
-        onEdgesChange(changes)
-      },
-      [onEdgesChange, nodes, edges, saveGraphSnapshot]
-    )
-
     return (
       <div ref={reactFlowWrapper} className="h-full flex-1">
         <ReactFlow
           nodes={nodesWithIndexes}
           edges={edges}
           onNodesChange={handleNodesChange}
-          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           isValidConnection={isValidConnection}
           onInit={setRfInstance}

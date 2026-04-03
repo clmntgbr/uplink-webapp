@@ -2,6 +2,7 @@
 
 import { createContext, useContext } from "react"
 import {
+  CreateConnectionPayload,
   CreateWorkflowPayload,
   UpdateWorkflowPayload,
   Workflow,
@@ -11,6 +12,8 @@ import {
 interface WorkflowContextType extends WorkflowState {
   fetchWorkflows: () => Promise<void>
   fetchWorkflow: (id: string) => Promise<Workflow>
+  removeConnection: (id: string) => Promise<void>
+  addConnection: (payload: CreateConnectionPayload) => Promise<void>
   createWorkflow: (payload: CreateWorkflowPayload) => Promise<void>
   updateWorkflow: (payload: UpdateWorkflowPayload) => Promise<void>
 }
