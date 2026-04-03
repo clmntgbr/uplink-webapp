@@ -1,4 +1,8 @@
-import { GetMethodColor } from "@/lib/method-color"
+import {
+  GetMethodCardColor,
+  GetMethodCodeColor,
+  GetMethodColor,
+} from "@/lib/method-color"
 import type { Step } from "@/lib/step/types"
 import { cn } from "@/lib/utils"
 import { Handle, Position, type NodeProps } from "@xyflow/react"
@@ -23,6 +27,7 @@ function StepNode({ data, selected }: NodeProps) {
         size="sm"
         className={cn(
           "w-auto transition-all",
+          GetMethodCardColor(step.endpoint?.method),
           selected && "py-3 shadow-lg ring-1 ring-primary"
         )}
       >
@@ -35,7 +40,12 @@ function StepNode({ data, selected }: NodeProps) {
           </Badge>
           <div className="flex min-w-0 flex-1 flex-col gap-0 pl-3">
             <p className="truncate text-base font-semibold">{step.name}</p>
-            <code className="inline-block w-fit truncate rounded bg-accent px-1.5 py-0.5 font-mono text-xs text-accent-foreground">
+            <code
+              className={cn(
+                "inline-block w-fit truncate rounded px-1.5 py-0.5 font-mono text-xs",
+                GetMethodCodeColor(step.endpoint?.method)
+              )}
+            >
               {step.endpoint?.path}
             </code>
           </div>
