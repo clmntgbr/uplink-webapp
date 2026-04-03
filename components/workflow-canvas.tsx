@@ -7,6 +7,7 @@ import type {
   WorkflowStep,
 } from "@/lib/workflow/types"
 import {
+  addEdge,
   applyNodeChanges,
   Background,
   BackgroundVariant,
@@ -19,6 +20,7 @@ import {
   useNodesState,
   type Connection,
   type Edge,
+  type EdgeChange,
   type EdgeProps,
   type Node,
   type NodeChange,
@@ -181,10 +183,10 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
     { workflow, onWorkflowChange, onStepSelect, onSave },
     ref
   ) {
-    const { addConnection } = useWorkflow()
+    const { addConnection, removeConnection } = useWorkflow()
     const initialState = workflowToReactFlow(workflow)
     const [nodes, setNodes, onNodesChange] = useNodesState(initialState.nodes)
-    const [edges] = useEdgesState(initialState.edges)
+    const [edges, setEdges, onEdgesChange] = useEdgesState(initialState.edges)
     const reactFlowWrapper = useRef<HTMLDivElement>(null)
     const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null)
     const onWorkflowChangeRef = useRef(onWorkflowChange)
@@ -313,16 +315,49 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
       return source !== target
     }, [])
 
+    const handleEdgesChange = useCallback(
+      (changes: EdgeChange[]) => {
+        onEdgesChange(changes)
+        for (const change of changes) {
+          if (change.type === "remove") {
+            void removeConnection(change.id).catch((err) =>
+              console.error("[workflow canvas] failed to delete connection", err)
+            )
+          }
+        }
+      },
+      [onEdgesChange, removeConnection]
+    )
+
     const onConnect = useCallback(
       (params: Connection) => {
-        if (!workflow?.id) return
-        addConnection({
-          workflowId: workflow?.id,
+        const wfId = workflowRef.current?.id
+        if (!wfId) return
+        void addConnection({
+          workflowId: wfId,
           from: params.source!,
           to: params.target!,
         })
+          .then((conn) => {
+            setEdges((eds) =>
+              addEdge(
+                {
+                  ...params,
+                  id: conn.id,
+                  source: params.source!,
+                  target: params.target!,
+                  type: "default",
+                  markerEnd: { type: MarkerType.ArrowClosed },
+                },
+                eds
+              )
+            )
+          })
+          .catch((err) =>
+            console.error("[workflow canvas] failed to create connection", err)
+          )
       },
-      [addConnection, workflow?.id]
+      [addConnection, setEdges]
     )
 
     const onDragOver = useCallback((event: React.DragEvent) => {
@@ -412,6 +447,7 @@ const WorkflowCanvas = forwardRef<WorkflowCanvasRef, WorkflowCanvasProps>(
           nodes={nodesWithIndexes}
           edges={edges}
           onNodesChange={handleNodesChange}
+          onEdgesChange={handleEdgesChange}
           onConnect={onConnect}
           isValidConnection={isValidConnection}
           onInit={setRfInstance}

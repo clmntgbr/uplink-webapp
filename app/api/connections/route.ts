@@ -23,6 +23,11 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       return NextResponse.json({ success: false }, { status: response.status })
     }
+
+    const data = await response.json().catch(() => null)
+    if (data !== null && typeof data === "object") {
+      return NextResponse.json(data)
+    }
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ success: false }, { status: 500 })

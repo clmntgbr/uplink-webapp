@@ -6,6 +6,7 @@ import {
   CreateWorkflowPayload,
   UpdateWorkflowPayload,
   Workflow,
+  WorkflowConnection,
   WorkflowState,
 } from "./types"
 
@@ -13,7 +14,9 @@ interface WorkflowContextType extends WorkflowState {
   fetchWorkflows: () => Promise<void>
   fetchWorkflow: (id: string) => Promise<Workflow>
   removeConnection: (id: string) => Promise<void>
-  addConnection: (payload: CreateConnectionPayload) => Promise<void>
+  addConnection: (
+    payload: CreateConnectionPayload
+  ) => Promise<WorkflowConnection>
   createWorkflow: (payload: CreateWorkflowPayload) => Promise<void>
   updateWorkflow: (payload: UpdateWorkflowPayload) => Promise<void>
 }

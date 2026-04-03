@@ -1,13 +1,14 @@
-import { useWorkflow } from "@/lib/workflow/context"
 import {
   BaseEdge,
   EdgeLabelRenderer,
   EdgeProps,
   getSmoothStepPath,
+  useReactFlow,
   type Edge,
   type Node,
 } from "@xyflow/react"
 import { Trash2 } from "lucide-react"
+import type { MouseEvent } from "react"
 
 type PersistGraph = (nodes: Node[], edges: Edge[]) => void
 
@@ -26,7 +27,7 @@ export default function DeleteEdgeButton({
   style = {},
   markerEnd,
 }: DeleteEdgeButtonProps) {
-  const { removeConnection } = useWorkflow()
+  const { deleteElements } = useReactFlow()
   const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
@@ -36,8 +37,11 @@ export default function DeleteEdgeButton({
     targetPosition,
   })
 
-  const onEdgeClick = () => {
-    removeConnection(id)
+  const onEdgeClick = (event: MouseEvent) => {
+    event.stopPropagation()
+    void deleteElements({ edges: [{ id }] }).catch((err) =>
+      console.error("[delete edge] failed to delete edge", err)
+    )
   }
 
   return (

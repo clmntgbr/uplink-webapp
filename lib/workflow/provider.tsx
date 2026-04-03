@@ -77,9 +77,7 @@ export function WorkflowProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const addConnection = useCallback(
-    async (payload: CreateConnectionPayload) => {
-      await postConnection(payload)
-    },
+    async (payload: CreateConnectionPayload) => postConnection(payload),
     []
   )
 
